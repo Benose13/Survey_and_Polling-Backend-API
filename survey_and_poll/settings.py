@@ -10,10 +10,24 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import environ
+import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+if "runserver" in sys.argv:
+    env_file = BASE_DIR / ".env.dev"
+else:
+    env_file = BASE_DIR / ".env.prod"
+
+if env_file.exists():
+    environ.Env.read_env(env_file)
+else:
+    raise FileNotFoundError(f"{env_file} not found. Please create it.")
 
 
 # Quick-start development settings - unsuitable for production
