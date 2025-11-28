@@ -16,10 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
+
+# Simple test view
+def test_view(request):
+    return HttpResponse("Server is working!")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('authentication.urls')),
     path('api/', include('polls.urls')),
     path('api/', include('users.urls')),
+    path('test/', test_view),
 ]
