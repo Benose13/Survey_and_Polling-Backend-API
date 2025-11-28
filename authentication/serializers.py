@@ -17,7 +17,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['rewrite_password']:
-            raise serializers.ValidationError({"password": "Passwords must match."})
+            raise serializers.ValidationError({"password": "Both Passwords does not match."})
         return attrs
 
     def create(self, validated_data):
