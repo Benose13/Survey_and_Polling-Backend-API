@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model, authenticate, login, logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
+from .authentication import CsrfExemptSessionAuthentication
 from .serializers import (
     RegisterSerializer,
     ResponseSerializer,
@@ -26,7 +27,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class RegisterViewSet(APIView):
-    authentication_classes = (BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -41,7 +42,7 @@ class RegisterViewSet(APIView):
 
 
 class LoginViewSet(APIView):
-    authentication_classes = (BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -66,7 +67,7 @@ class LoginViewSet(APIView):
 
 
 class LogoutViewSet(APIView):
-    authentication_classes = (BasicAuthentication)
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):

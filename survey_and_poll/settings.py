@@ -14,10 +14,19 @@ import environ
 import os
 import sys
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ------------------------------------------------------------------
+# Environment setup
+# ------------------------------------------------------------------
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Load .env file depending on run context
 env = environ.Env()
 if "runserver" in sys.argv:
     env_file = BASE_DIR / ".env.dev"
@@ -29,21 +38,45 @@ if env_file.exists():
 else:
     raise FileNotFoundError(f"{env_file} not found. Please create it.")
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-m65a-i4b#py$c4qy2p%o+l)qim7qhv6ya1ytq^k*+(gn8*!mcu'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# ------------------------------------------------------------------
+# General settings
+# ------------------------------------------------------------------
+SECRET_KEY = env("SECRET_KEY", default="insecure-default-key")
+DEBUG = env("DEBUG", default=False)
 
-ALLOWED_HOSTS = []
+def get_list_from_env(name, default=""):
+    """Safely split comma-separated env vars into a list."""
+    value = env(name, default=default)
+    if not value:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]
 
+ALLOWED_HOSTS = get_list_from_env("DJANGO_ALLOWED_HOSTS")
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+CORS_ALLOWED_ORIGINS = get_list_from_env("CORS_ALLOWED_ORIGINS")
+if DEBUG and not CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+    ]
+
+CSRF_TRUSTED_ORIGINS = get_list_from_env("CSRF_TRUSTED_ORIGINS")
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+    CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,9 +93,13 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
+    "corsheaders",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -139,6 +176,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -146,9 +187,17 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "polls.permissions.ReadOnlyOrAuthenticated",
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# ------------------------------------------------------------------
+# Custom user model
+# 
 AUTH_USER_MODEL = 'users.CustomUser'

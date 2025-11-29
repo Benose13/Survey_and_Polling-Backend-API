@@ -18,6 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
 from django.views.generic import RedirectView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
 
 # Simple test view
 def test_view(request):
@@ -25,10 +30,14 @@ def test_view(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Core API routes
     path('api/auth/', include('authentication.urls')),
     path('api/', include('polls.urls')),
     path('api/', include('users.urls')),
     path('api/auth', include('users.urls')),
     path('test/', test_view),
+
+    # Redirect bare domain → API root
     path("", RedirectView.as_view(url="/api/", permanent=True)),
 ]
