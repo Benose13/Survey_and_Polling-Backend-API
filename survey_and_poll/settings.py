@@ -201,3 +201,43 @@ REST_FRAMEWORK = {
 # Custom user model
 # 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# ------------------------------------------------------------------
+# Spectacular / Swagger
+# ------------------------------------------------------------------
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Poll System API",
+    "DESCRIPTION": "Backend API for creating polls, voting, and managing results.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SECURITY": [
+        {"BasicAuth": []},
+        {"SessionAuth": []},
+    ],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BasicAuth": {
+                "type": "http",
+                "scheme": "basic",
+                "description": "Use your username and password to authenticate.",
+            },
+            "SessionAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid",
+                "description": "Session-based authentication using Django's session cookie.",
+            },
+        }
+    },
+    "TAGS": [
+        {"name": "Polls", "description": "Poll management endpoints"},
+        {"name": "Options", "description": "Poll options"},
+        {"name": "Votes", "description": "Vote submission"},
+        {"name": "Auth", "description": "User authentication and registration"},
+    ],
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "oauth2RedirectUrl": "/api-auth/login/",
+    },
+}
