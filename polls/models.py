@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -40,6 +41,3 @@ class Vote(models.Model):
 
     def __str__(self):
         return f"Session {self.session_key} voted for {self.option.text}"
-
-    class Meta:
-        unique_together = ('poll', 'voter')
