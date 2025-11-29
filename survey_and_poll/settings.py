@@ -13,8 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import environ
 import os
 import sys
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,7 +50,7 @@ SECRET_KEY = 'django-insecure-m65a-i4b#py$c4qy2p%o+l)qim7qhv6ya1ytq^k*+(gn8*!mcu
 # General settings
 # ------------------------------------------------------------------
 SECRET_KEY = env("SECRET_KEY", default="insecure-default-key")
-DEBUG = env("DEBUG", default=False)
+DEBUG = env("DEBUG", default=False, cast=bool)
 
 def get_list_from_env(name, default=""):
     """Safely split comma-separated env vars into a list."""
@@ -57,7 +59,7 @@ def get_list_from_env(name, default=""):
         return []
     return [v.strip() for v in value.split(",") if v.strip()]
 
-ALLOWED_HOSTS = get_list_from_env("DJANGO_ALLOWED_HOSTS")
+ALLOWED_HOSTS = ['*']
 if DEBUG and not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
@@ -68,7 +70,10 @@ if DEBUG and not CORS_ALLOWED_ORIGINS:
         "http://127.0.0.1:5173",
     ]
 
-CSRF_TRUSTED_ORIGINS = get_list_from_env("CSRF_TRUSTED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://*.yourdomain.com',
+]
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
         "http://localhost:8000",
@@ -107,6 +112,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'survey_and_poll.urls'
@@ -144,17 +150,13 @@ if USE_SQLITE:
         }
     }
 else:
-    # Local development (Postgres)
+    # Render development (dj database)
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("POSTGRES_DB", default="poll_db"),
-            "USER": env("POSTGRES_USER", default="poll_user"),
-            "PASSWORD": env("POSTGRES_PASSWORD", default="secret"),
-            "HOST": env("POSTGRES_HOST", default="localhost"),
-            "PORT": env("POSTGRES_PORT", default="5432"),
-        }
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -192,6 +194,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "mediafiles"

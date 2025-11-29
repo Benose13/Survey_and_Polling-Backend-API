@@ -1,0 +1,1 @@
+web: gunicorn survey_and_poll.wsgi:application --bind 0.0.0.0:$PORT
