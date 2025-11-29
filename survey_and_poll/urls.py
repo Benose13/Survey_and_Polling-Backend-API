@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.views.generic import RedirectView
 
 # Simple test view
 def test_view(request):
@@ -27,5 +28,7 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/', include('polls.urls')),
     path('api/', include('users.urls')),
+    path('api/auth', include('users.urls')),
     path('test/', test_view),
+    path("", RedirectView.as_view(url="/api/", permanent=True)),
 ]
